@@ -11,6 +11,12 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Update="Store\store.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Avalonia"/>
         <PackageReference Include="Avalonia.Themes.Fluent"/>
         <PackageReference Include="Avalonia.Fonts.Inter"/>
@@ -24,6 +30,5 @@
 
     <ItemGroup>
       <Folder Include="Requests\" />
-      <Folder Include="Store\" />
     </ItemGroup>
 </Project>

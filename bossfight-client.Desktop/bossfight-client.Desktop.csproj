@@ -21,6 +21,12 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="..\bossfight-client\Store\store.json" Link="store.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\bossfight-client\bossfight-client.csproj"/>
     </ItemGroup>
 </Project>
