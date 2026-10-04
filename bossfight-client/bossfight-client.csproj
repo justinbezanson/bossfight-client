@@ -27,8 +27,4 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Requests\" />
-    </ItemGroup>
 </Project>
