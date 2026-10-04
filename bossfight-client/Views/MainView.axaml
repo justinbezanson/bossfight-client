@@ -27,10 +27,17 @@
                  IsVisible="{Binding ApiKeyError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
       <TextBlock Text="Player ID" FontWeight="SemiBold" />
-      <ComboBox ItemsSource="{Binding AvailablePlayerIds}"
-                SelectedItem="{Binding PlayerId}"
-                HorizontalAlignment="Stretch"
-                PlaceholderText="Select a player" />
+      <Grid ColumnDefinitions="*,Auto">
+        <ComboBox ItemsSource="{Binding AvailablePlayerIds}"
+                  SelectedItem="{Binding PlayerId}"
+                  HorizontalAlignment="Stretch"
+                  PlaceholderText="Select a player"
+                  Grid.Column="0" />
+        <Button Content="Refresh"
+                Command="{Binding RefreshPlayersCommand}"
+                Margin="8,0,0,0"
+                Grid.Column="1" />
+      </Grid>
       <TextBlock Text="{Binding PlayerIdError}"
                  Foreground="#D13438"
                  TextWrapping="Wrap"

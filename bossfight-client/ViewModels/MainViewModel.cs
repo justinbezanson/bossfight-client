@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using bossfight_client.Requests;
+using bossfight_client.Responses;
 using bossfight_client.Services;
 using StoreModel = bossfight_client.Store.Store;
 
@@ -61,11 +63,29 @@ public partial class MainViewModel : ViewModelBase
 
     public async Task InitializeAsync()
     {
+        await LoadPlayersAsync();
+    }
+
+    [RelayCommand]
+    private async Task RefreshPlayersAsync()
+    {
+        await LoadPlayersAsync();
+    }
+
+    private async Task LoadPlayersAsync()
+    {
         IsBusy = true;
         StatusMessage = "Loading players...";
 
         try
         {
+            if (string.IsNullOrWhiteSpace(ApiKey) || string.IsNullOrWhiteSpace(ApiUrl))
+            {
+                AvailablePlayerIds.Clear();
+                StatusMessage = "API key and API URL are required to load players.";
+                return;
+            }
+
             IReadOnlyList<string> ids = await _playerIdProvider.GetPlayerIdsAsync();
             AvailablePlayerIds.Clear();
 
@@ -74,10 +94,18 @@ public partial class MainViewModel : ViewModelBase
                 AvailablePlayerIds.Add(id);
             }
 
-            StatusMessage = null;
+            if (AvailablePlayerIds.Count == 0)
+            {
+                StatusMessage = "Failed to load players.";
+            }
+            else
+            {
+                StatusMessage = null;
+            }
         }
         catch (Exception ex)
         {
+            AvailablePlayerIds.Clear();
             StatusMessage = $"Could not load players: {ex.Message}";
         }
         finally

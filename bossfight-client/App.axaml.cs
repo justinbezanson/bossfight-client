@@ -44,7 +44,7 @@ public partial class App : Application
                 Desktop.PostStartupError(ex);
             }
 
-            var viewModel = new MainViewModel(store, new SamplePlayerIdProvider());
+            var viewModel = new MainViewModel(store, new ApiPlayerIdProvider(store));
 
             _mainWindow = new MainWindow
             {
@@ -66,7 +66,7 @@ public partial class App : Application
         {
             singleViewPlatform.MainView = new MainView
             {
-                DataContext = new MainViewModel(new StoreModel(), new SamplePlayerIdProvider())
+                DataContext = new MainViewModel(new StoreModel(), new ApiPlayerIdProvider(new StoreModel()))
             };
         }
 
