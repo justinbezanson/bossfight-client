@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -14,13 +15,10 @@ namespace bossfight_client.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     private readonly StoreModel _store;
-    private readonly IPlayerIdProvider _playerIdProvider;
+    private readonly IPlayerProvider _playerProvider;
 
     [ObservableProperty]
     private string? _apiKeyError;
-
-    [ObservableProperty]
-    private string? _playerIdError;
 
     [ObservableProperty]
     private string? _apiUrlError;
@@ -35,26 +33,30 @@ public partial class MainViewModel : ViewModelBase
     private string _apiKey;
 
     [ObservableProperty]
-    private string _playerId;
+    private Player? _selectedPlayer;
 
     [ObservableProperty]
     private string _apiUrl;
 
-    public MainViewModel(StoreModel store, IPlayerIdProvider playerIdProvider)
+    public MainViewModel(StoreModel store, IPlayerProvider playerProvider)
     {
         _store = store;
-        _playerIdProvider = playerIdProvider;
+        _playerProvider = playerProvider;
 
         _apiKey = store.ApiKey;
-        _playerId = store.PlayerId;
         _apiUrl = store.ApiUrl;
 
-        AvailablePlayerIds = [];
+        AvailablePlayers = [];
 
         Validate();
     }
 
-    public ObservableCollection<string> AvailablePlayerIds { get; }
+    public ObservableCollection<Player> AvailablePlayers { get; }
+
+    /// <summary>
+    /// The id written to the store, or 0 when nothing is selected.
+    /// </summary>
+    public int PlayerId => SelectedPlayer?.Id ?? 0;
 
     /// <summary>
     /// True once a save has succeeded, used to show the "saved" confirmation.
@@ -81,20 +83,27 @@ public partial class MainViewModel : ViewModelBase
         {
             if (string.IsNullOrWhiteSpace(ApiKey) || string.IsNullOrWhiteSpace(ApiUrl))
             {
-                AvailablePlayerIds.Clear();
+                AvailablePlayers.Clear();
                 StatusMessage = "API key and API URL are required to load players.";
                 return;
             }
 
-            IReadOnlyList<string> ids = await _playerIdProvider.GetPlayerIdsAsync();
-            AvailablePlayerIds.Clear();
+            IReadOnlyList<Player> players = await _playerProvider.GetPlayersAsync(Snapshot());
 
-            foreach (string id in ids)
+            // Read the wanted id before the collection is rebuilt, otherwise the old
+            // selection object is still hanging off SelectedPlayer.
+            int wantedId = PlayerId != 0 ? PlayerId : _store.PlayerId;
+
+            AvailablePlayers.Clear();
+
+            foreach (Player player in players)
             {
-                AvailablePlayerIds.Add(id);
+                AvailablePlayers.Add(player);
             }
 
-            if (AvailablePlayerIds.Count == 0)
+            SelectedPlayer = AvailablePlayers.FirstOrDefault(p => p.Id == wantedId);
+
+            if (AvailablePlayers.Count == 0)
             {
                 StatusMessage = "Failed to load players.";
             }
@@ -105,7 +114,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            AvailablePlayerIds.Clear();
+            AvailablePlayers.Clear();
             StatusMessage = $"Could not load players: {ex.Message}";
         }
         finally
@@ -116,25 +125,24 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnApiKeyChanged(string value) => Validate();
 
-    partial void OnPlayerIdChanged(string value) => Validate();
-
     partial void OnApiUrlChanged(string value) => Validate();
+
+    /// <summary>
+    /// A throwaway copy of the form's current values, so validation and API calls work
+    /// from what is typed in rather than from what has already been saved to disk.
+    /// </summary>
+    private StoreModel Snapshot() => new()
+    {
+        ApiKey = ApiKey.Trim(),
+        PlayerId = PlayerId,
+        ApiUrl = ApiUrl.Trim()
+    };
 
     private void Validate()
     {
-        // Build a throwaway snapshot of what would be written, so the form and the
-        // startup path share one set of rules.
-        var candidate = new StoreModel
-        {
-            ApiKey = ApiKey,
-            PlayerId = PlayerId,
-            ApiUrl = ApiUrl
-        };
-
-        IReadOnlyDictionary<string, string> errors = candidate.Validate();
+        IReadOnlyDictionary<string, string> errors = Snapshot().Validate();
 
         ApiKeyError = errors.GetValueOrDefault(nameof(StoreModel.ApiKey));
-        PlayerIdError = errors.GetValueOrDefault(nameof(StoreModel.PlayerId));
         ApiUrlError = errors.GetValueOrDefault(nameof(StoreModel.ApiUrl));
 
         SaveCommand.NotifyCanExecuteChanged();
@@ -146,12 +154,11 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             _store.ApiKey = ApiKey.Trim();
-            _store.PlayerId = PlayerId.Trim();
+            _store.PlayerId = PlayerId;
             _store.ApiUrl = ApiUrl.Trim();
             _store.Save();
 
             ApiKey = _store.ApiKey;
-            PlayerId = _store.PlayerId;
             ApiUrl = _store.ApiUrl;
 
             HasSaved = true;
@@ -171,7 +178,6 @@ public partial class MainViewModel : ViewModelBase
     private bool IsFormValid()
     {
         return string.IsNullOrEmpty(ApiKeyError)
-            && string.IsNullOrEmpty(PlayerIdError)
             && string.IsNullOrEmpty(ApiUrlError);
     }
 

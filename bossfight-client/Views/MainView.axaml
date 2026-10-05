@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:bossfight_client.ViewModels"
+             xmlns:responses="using:bossfight_client.Responses"
              mc:Ignorable="d" d:DesignWidth="520" d:DesignHeight="340"
              x:Class="bossfight_client.Views.MainView"
              x:DataType="vm:MainViewModel">
@@ -28,20 +29,22 @@
 
       <TextBlock Text="Player ID" FontWeight="SemiBold" />
       <Grid ColumnDefinitions="*,Auto">
-        <ComboBox ItemsSource="{Binding AvailablePlayerIds}"
-                  SelectedItem="{Binding PlayerId}"
+        <ComboBox ItemsSource="{Binding AvailablePlayers}"
+                  SelectedItem="{Binding SelectedPlayer}"
                   HorizontalAlignment="Stretch"
                   PlaceholderText="Select a player"
-                  Grid.Column="0" />
+                  Grid.Column="0">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="responses:Player">
+              <TextBlock Text="{Binding Name}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
         <Button Content="Refresh"
                 Command="{Binding RefreshPlayersCommand}"
                 Margin="8,0,0,0"
                 Grid.Column="1" />
       </Grid>
-      <TextBlock Text="{Binding PlayerIdError}"
-                 Foreground="#D13438"
-                 TextWrapping="Wrap"
-                 IsVisible="{Binding PlayerIdError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
       <TextBlock Text="API URL" FontWeight="SemiBold" />
       <TextBox Text="{Binding ApiUrl}" Watermark="https://example.com/api" />

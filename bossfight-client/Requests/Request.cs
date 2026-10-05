@@ -34,6 +34,10 @@ public abstract class Request
         var uri = new Uri(new Uri(Store.ApiUrl), Endpoint);
         var request = new HttpRequestMessage(Method, uri);
 
+        // Required: without it Laravel's wantsJson() is false and controllers fall
+        // through to Inertia, which answers with the HTML shell instead of JSON.
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
         if (!string.IsNullOrWhiteSpace(Store.ApiKey))
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Store.ApiKey);
@@ -50,6 +54,6 @@ public abstract class Request
 
         return CreateResponse(response.IsSuccessStatusCode, content, response.StatusCode.ToString());
     }
-
+    
     protected abstract Response CreateResponse(bool success, string content, string status);
 }

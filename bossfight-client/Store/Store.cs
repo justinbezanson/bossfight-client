@@ -26,7 +26,7 @@ public partial class Store : ObservableObject
     };
 
     private string _apiKey = string.Empty;
-    private string _playerId = string.Empty;
+    private int _playerId = 0;
     private string _apiUrl = string.Empty;
     private string? _path;
 
@@ -38,7 +38,7 @@ public partial class Store : ObservableObject
     }
 
     [JsonPropertyName("player-id")]
-    public string PlayerId
+    public int PlayerId
     {
         get => _playerId;
         set => SetProperty(ref _playerId, value);
@@ -140,11 +140,6 @@ public partial class Store : ObservableObject
         if (string.IsNullOrWhiteSpace(ApiKey))
         {
             errors[nameof(ApiKey)] = "API key is required.";
-        }
-
-        if (string.IsNullOrWhiteSpace(PlayerId))
-        {
-            errors[nameof(PlayerId)] = "Player ID is required.";
         }
 
         if (string.IsNullOrWhiteSpace(ApiUrl))

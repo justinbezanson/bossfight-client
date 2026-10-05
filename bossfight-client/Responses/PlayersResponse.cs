@@ -1,12 +1,18 @@
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace bossfight_client.Responses;
 
 public class Player
 {
-    public string? Id { get; set; }
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    [JsonPropertyName("name")]
     public string? Name { get; set; }
+
+    [JsonPropertyName("status")]
     public string? Status { get; set; }
 }
 
